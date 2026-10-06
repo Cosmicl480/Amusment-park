@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>3D Happy Land</title>
+
+<style>
+    body {
+        margin: 0;
+        overflow: hidden;
+        font-family: Arial, sans-serif;
+        background: #87ceeb;
+    }
+
+    #title {
+        position: absolute;
+        top: 15px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 10;
+
+        color: white;
+        background: #ff477e;
+        padding: 12px 25px;
+        border-radius: 20px;
+
+        font-size: 25px;
+        font-weight: bold;
+
+        box-shadow: 0 5px 15px #555;
+    }
+
+    #info {
+        position: absolute;
+        bottom: 15px;
+        left: 15px;
+        z-index: 10;
+
+        background: white;
+        padding: 10px 15px;
+        border-radius: 10px;
+
+        color: #333;
+    }
+</style>
+</head>
+
+<body>
+
+<div id="title">🎢 HAPPY LAND 3D 🎡</div>
+
+<div id="info">
+    🖱️ Drag = Look around &nbsp; | &nbsp;
+    🖱️ Scroll = Zoom
+</div>
+
+<!-- THREE.JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<!-- CAMERA CONTROLS -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+<script>
+
+// =====================================================
+// 1. BASIC 3D SETUP
+// =====================================================
+
+const scene = new THREE.Scene();
+
+scene.background = new THREE.Color(0x87ceeb);
+
+// Camera
+const camera = new THREE.PerspectiveCamera(
+    60,
+    window.innerWidth / window.innerHeight,
+    0.1,
+    1000
+);
+
+camera.position.set(25, 20, 30);
+
+// Renderer
+const renderer = new THREE.WebGLRenderer({
+    antialias: true
+});
+
+renderer.setSize(
+    window.innerWidth,
+    window.innerHeight
+);
+
+renderer.shadowMap.enabled = true;
+
+document.body.appendChild(renderer.domElement);
+
+
+// =====================================================
+// 2. CAMERA CONTROLS
+// =====================================================
+
+const controls = new THREE.OrbitControls(
+    camera,
+    renderer.domElement
+);
+
+controls.enableDamping = true;
+
+controls.target.set(0, 0, 0);
+
+
+// =====================================================
+// 3. LIGHTING
+// =====================================================
+
+const sunlight = new THREE.DirectionalLight(
+    0xffffff,
+    1.5
+);
+
+sunlight.position.set(20, 30, 20);
+
+sunlight.castShadow = true;
+
+scene.add(sunlight);
+
+
+const ambientLight = new THREE.AmbientLight(
+    0xffffff,
+    0.6
+);
+
+scene.add(ambientLight);
+
+
+// =====================================================
+// 4. GROUND
+// =====================================================
+
+const groundGeometry =
+    new THREE.BoxGeometry(60, 1, 60);
+
+const groundMaterial =
+    new THREE.MeshLambertMaterial({
+        color: 0x55aa44
+    });
+
+const ground =
+    new THREE.Mesh(
+        groundGeometry,
+        groundMaterial
+    );
+
+ground.position.y = -0.5;
+
+ground.receiveShadow = true;
+
+scene.add(ground);
+
+
+// =====================================================
+// 5. ROAD / PATH
+// =====================================================
+
+const pathGeometry =
+    new THREE.BoxGeometry(60, 0.1, 5);
+
+const pathMaterial =
+    new THREE.MeshLambertMaterial({
+        color: 0xd9b27c
+    });
+
+const path =
+    new THREE.Mesh(
+        pathGeometry,
+        pathMaterial
+    );
+
+path.position.y = 0.05;
+
+scene.add(path);
+
+
+// =====================================================
+// 6. ROLLER COASTER TRACK
+// =====================================================
+
+// We create several track pieces.
+
+const trackMaterial =
+    new THREE.MeshLambertMaterial({
+        color: 0x333333
+    });
+
+
+function makeTrack(x, y, z, rotationZ) {
+
+    const geometry =
+        new THREE.CylinderGeometry(
+            0.12,
+            0.12,
+            6,
+            12
+        );
+
+    const track =
+        new THREE.Mesh(
+            geometry,
+            trackMaterial
+        );
+
+    track.position.set(x, y, z);
+
+    track.rotation.z = rotationZ;
+
+    track.castShadow = true;
+
+    scene.add(track);
+}
+
+
+// Horizontal track
+
+for (let x = -16; x < 16; x += 3) {
+
+    makeTrack(
+        x,
+        5,
+        -5,
+        Math.PI / 2
+    );
+}
+
+
+// =====================================================
+// COASTER SUPPORTS
+// =====================================================
+
+function makeSupport(x) {
+
+    const geometry =
+        new THREE.CylinderGeometry(
+            0.18,
+            0.18,
+            5,
+            10
+        );
+
+    const material =
+        new THREE.MeshLambertMaterial({
+            color: 0x777777
+        });
+
+    const support =
+        new THREE.Mesh(
+            geometry,
+            material
+        );
+
+    support.position.set(
+        x,
+        2.5,
+        -5
+    );
+
+    support.castShadow = true;
+
+    scene.add(support);
+}
+
+
+for (let x = -15; x <= 15; x += 5) {
+
+    makeSupport(x);
+
+}
+
+
+// =====================================================
+// COASTER CART
+// =====================================================
+
+const cartGeometry =
+    new THREE.BoxGeometry(
+        1.5,
+        0.7,
+        1.2
+    );
+
+const cartMaterial =
+    new THREE.MeshLambertMaterial({
+        color: 0xff3333
+    });
+
+const cart =
+    new THREE.Mesh(
+        cartGeometry,
+        cartMaterial
+    );
+
+cart.position.set(
+    -15,
+    5.8,
+    -5
+);
+
+cart.castShadow = true;
+
+scene.add(cart);
+
+
+// People inside cart
+
+const personGeometry =
+    new THREE.SphereGeometry(
+        0.35,
+        16,
+        16
+    );
+
+const personMaterial =
+    new THREE.MeshLambertMaterial({
+        color: 0xffddaa
+    });
+
+
+const person1 =
+    new THREE.Mesh(
+        personGeometry,
+        personMaterial
+    );
+
+person1.position.set(
+    -15.3,
+    6.5,
+    -5
+);
+
+scene.add(person1);
+
+
+const person2 =
+    new THREE.Mesh(
+        personGeometry,
+        personMaterial
+    );
+
+person2.position.set(
+    -14.7,
+    6.5,
+    -5
+);
+
+scene.add(person2);
+
+
+// =====================================================
+// 7. FERRIS WHEEL
+// =====================================================
+
+const wheelGroup =
+    new THREE.Group();
+
+wheelGroup.position.set(
+    12,
+    7,
+    -7
+);
+
+scene.add(wheelGroup);
+
+
+// Wheel
+
+const wheelGeometry =
+    new THREE.TorusGeometry(
+        5,
+        0.18,
+        12,
+        50
+    );
+
+const wheelMaterial =
+    new THREE.MeshLambertMaterial({
+        color: 0xff3366
+    });
+
+const wheel =
+    new THREE.Mesh(
+        wheelGeometry,
+        wheelMaterial
+    );
+
+wheelGroup.add(wheel);
+
+
+// Center
+
+const centerGeometry =
+    new THREE.SphereGeometry(
+        0.5,
+        16,
+        16
+    );
+
+const centerMaterial =
+    new THREE.MeshLambertMaterial({
+        color: 0xffff00
+    });
+
+const center =
+    new THREE.Mesh(
+        centerGeometry,
+        centerMaterial
+    );
+
+wheelGroup.add(center);
+
+
+// Spokes
+
+for (let i = 0; i < 8; i++) {
+
+    const spokeGeometry =
+        new THREE.BoxGeometry(
+            0.12,
+            10,
+            0.12
+        );
+
+    const spoke =
+        new THREE.Mesh(
+            spokeGeometry,
+            wheelMaterial
+        );
+
+    spoke.rotation.z =
+        (Math.PI / 4) * i;
+
+    wheelGroup.add(spoke);
+}
+
+
+// Ferris wheel stand
+
+const standGeometry =
+    new THREE.CylinderGeometry(
+        0.25,
+        0.25,
+        7,
+        10
+    );
+
+const standMaterial =
+    new THREE.MeshLambertMaterial({
+        color: 0x555555
+    });
+
+
+const stand1 =
+    new THREE.Mesh(
+        standGeometry,
+        standMaterial
+    );
+
+stand1.position.set(
+    10,
+    3.5,
+    -7
+);
+
+scene.add(stand1);
+
+
+const stand2 =
+    stand1.clone();
+
+stand2.position.x = 14;
+
+scene.add(stand2);
+
+
+// =====================================================
+// 8. CANDY STALL
+// =====================================================
+
+const stallGroup =
+    new THREE.Group();
+
+stallGroup.position.set(
+    8,
+    2,
+    6
+);
+
+scene.add(stallGroup);
+
+
+// Stall building
+
+const stallGeometry =
+    new THREE.BoxGeometry(
+        5,
+        4,
+        3
+    );
+
+const stallMaterial =
+    new THREE.MeshLambertMaterial({
+        color: 0xff6688
+    });
+
+const stall =
+    new THREE.Mesh(
+        stallGeometry,
+        stallMaterial
+    );
+
+stall.castShadow = true;
+
+stallGroup.add(stall);
+
+
+// Roof
+
+const roofGeometry =
+    new THREE.ConeGeometry(
+        3.5,
+        2,
+        4
+    );
+
+const roofMaterial =
+    new THREE.MeshLambertMaterial({
+        color: 0xffffff
+    });
+
+const roof =
+    new THREE.Mesh(
+        roofGeometry,
+        roofMaterial
+    );
+
+roof.rotation.y =
+    Math.PI / 4;
+
+roof.position.y = 3;
+
+stallGroup.add(roof);
+
+
+// Candy sign
+
+const signGeometry =
+    new THREE.BoxGeometry(
+        4,
+        0.8,
+        0.2
+    );
+
+const signMaterial =
+    new THREE.MeshLambertMaterial({
+        color: 0xffcc00
+    });
+
+const sign =
+    new THREE.Mesh(
+        signGeometry,
+        signMaterial
+    );
+
+sign.position.set(
+    0,
+    1,
+    -1.6
+);
+
+stallGroup.add(sign);
+
+
+// =====================================================
+// 9. CANDY LOLLIPOPS
+// =====================================================
+
+function makeCandy(x, z, color) {
+
+    const stickGeometry =
+        new THREE.CylinderGeometry(
+            0.05,
+            0.05,
+            1.5,
+            8
+        );
+
+    const stickMaterial =
+        new THREE.MeshLambertMaterial({
+            color: 0xffffff
+        });
+
+    const stick =
+        new THREE.Mesh(
+            stickGeometry,
+            stickMaterial
+        );
+
+    stick.position.set(
+        x,
+        3,
+        z
+    );
+
+    scene.add(stick);
+
+
+    const candyGeometry =
+        new THREE.SphereGeometry(
+            0.5,
+            16,
+            16
+        );
+
+    const candyMaterial =
+        new THREE.MeshLambertMaterial({
+            color: color
+        });
+
+    const candy =
+        new THREE.Mesh(
+            candyGeometry,
+            candyMaterial
+        );
+
+    candy.position.set(
+        x,
+        3.8,
+        z
+    );
+
+    scene.add(candy);
+}
+
+
+makeCandy(5.8, 4.3, 0xff3366);
+makeCandy(7, 4.3, 0xffff00);
+makeCandy(8.2, 4.3, 0x9933ff);
+
+
+// =====================================================
+// 10. TREES
+// =====================================================
+
+function makeTree(x, z) {
+
+    // Trunk
+
+    const trunkGeometry =
+        new THREE.CylinderGeometry(
+            0.4,
+            0.5,
+            3,
+            8
+        );
+
+    const trunkMaterial =
+        new THREE.MeshLambertMaterial({
+            color: 0x8b4513
+        });
+
+    const trunk =
+        new THREE.Mesh(
+            trunkGeometry,
+            trunkMaterial
+        );
+
+    trunk.position.set(
+        x,
+        1.5,
+        z
+    );
+
+    scene.add(trunk);
+
+
+    // Leaves
+
+    const leavesGeometry =
+        new THREE.SphereGeometry(
+            2,
+            16,
+            16
+        );
+
+    const leavesMaterial =
+        new THREE.MeshLambertMaterial({
+            color: 0x168a3b
+        });
+
+    const leaves =
+        new THREE.Mesh(
+            leavesGeometry,
+            leavesMaterial
+        );
+
+    leaves.position.set(
+        x,
+        4,
+        z
+    );
+
+    leaves.castShadow = true;
+
+    scene.add(leaves);
+}
+
+
+makeTree(-20, 8);
+makeTree(-20, -5);
+makeTree(20, 8);
+makeTree(20, -5);
+
+
+// =====================================================
+// 11. BALLOONS
+// =====================================================
+
+function makeBalloon(x, y, z, color) {
+
+    const balloonGeometry =
+        new THREE.SphereGeometry(
+            0.8,
+            16,
+            16
+        );
+
+    const balloonMaterial =
+        new THREE.MeshLambertMaterial({
+            color: color
+        });
+
+    const balloon =
+        new THREE.Mesh(
+            balloonGeometry,
+            balloonMaterial
+        );
+
+    balloon.scale.y = 1.3;
+
+    balloon.position.set(
+        x,
+        y,
+        z
+    );
+
+    scene.add(balloon);
+
+
+    // String
+
+    const stringGeometry =
+        new THREE.CylinderGeometry(
+            0.02,
+            0.02,
+            3,
+            6
+        );
+
+    const stringMaterial =
+        new THREE.MeshLambertMaterial({
+            color: 0x333333
+        });
+
+    const string =
+        new THREE.Mesh(
+            stringGeometry,
+            stringMaterial
+        );
+
+    string.position.set(
+        x,
+        y - 2,
+        z
+    );
+
+    scene.add(string);
+
+    return balloon;
+}
+
+
+const balloon1 =
+    makeBalloon(
+        -5,
+        7,
+        4,
+        0xff3333
+    );
+
+const balloon2 =
+    makeBalloon(
+        -3,
+        8,
+        4,
+        0xffff00
+    );
+
+const balloon3 =
+    makeBalloon(
+        -1,
+        7.5,
+        4,
+        0x9933ff
+    );
+
+
+// =====================================================
+// 12. PARK BENCH
+// =====================================================
+
+const benchGeometry =
+    new THREE.BoxGeometry(
+        4,
+        0.4,
+        1
+    );
+
+const benchMaterial =
+    new THREE.MeshLambertMaterial({
+        color: 0x8b4513
+    });
+
+const bench =
+    new THREE.Mesh(
+        benchGeometry,
+        benchMaterial
+    );
+
+bench.position.set(
+    -7,
+    1,
+    5
+);
+
+scene.add(bench);
+
+
+// =====================================================
+// 13. ANIMATION
+// =====================================================
+
+let coasterPosition = -15;
+
+function animate() {
+
+    requestAnimationFrame(animate);
+
+
+    // -----------------------------
+    // Roller coaster movement
+    // -----------------------------
+
+    coasterPosition += 0.12;
+
+    if (coasterPosition > 15) {
+        coasterPosition = -15;
+    }
+
+    cart.position.x = coasterPosition;
+
+    person1.position.x =
+        coasterPosition - 0.3;
+
+    person2.position.x =
+        coasterPosition + 0.3;
+
+
+    // -----------------------------
+    // Ferris wheel spinning
+    // -----------------------------
+
+    wheelGroup.rotation.z -= 0.01;
+
+
+    // -----------------------------
+    // Balloons floating
+    // -----------------------------
+
+    balloon1.position.y =
+        7 + Math.sin(Date.now() * 0.002) * 0.3;
+
+    balloon2.position.y =
+        8 + Math.sin(Date.now() * 0.002 + 1) * 0.3;
+
+    balloon3.position.y =
+        7.5 + Math.sin(Date.now() * 0.002 + 2) * 0.3;
+
+
+    // Update controls
+
+    controls.update();
+
+
+    // Draw scene
+
+    renderer.render(
+        scene,
+        camera
+    );
+}
+
+
+// Start
+
+animate();
+
+
+// =====================================================
+// 14. WINDOW RESIZE
+// =====================================================
+
+window.addEventListener(
+    "resize",
+    function() {
+
+        camera.aspect =
+            window.innerWidth /
+            window.innerHeight;
+
+        camera.updateProjectionMatrix();
+
+        renderer.setSize(
+            window.innerWidth,
+            window.innerHeight
+        );
+
+    }
+);
+
+</script>
+
+</body>
+</html>
